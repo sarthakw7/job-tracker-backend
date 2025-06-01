@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/job_tracker?useSSL=false&serverTimezone=UTC&createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: jobuser
+      SPRING_DATASOURCE_PASSWORD: Job@1234
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+
+
+      APP_JWT_SECRET: YourVeryLongAndSecureSecretKeyHereMakeItAtLeast256BitsLong
+      APP_JWT_EXPIRATION: 86400000
+
+
+
+    depends_on:
+      - db
+    networks:
+      - app-network
+    command: sh -c "while ! nc -z db 3306; do echo 'Waiting for the database...'; sleep 1; done; java -jar /app/app.jar"
+
+
+  # Service for your MySQL Database
+  db:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: SAR@23wag
+      MYSQL_DATABASE: job_tracker
+      MYSQL_USER: jobuser
+      MYSQL_PASSWORD: Job@1234
+
+      MYSQL_DEFAULT_AUTHENTICATION_PLUGIN: mysql_native_password
+
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - app-network
+
+# Define volumes
+volumes:
+  db_data:
+
+# Define a custom network
+networks:
+  app-network:
+    driver: bridge
